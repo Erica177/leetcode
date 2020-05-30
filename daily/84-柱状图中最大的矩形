@@ -1,0 +1,60 @@
+## 每日一题 - 84-柱状图中最大的矩形
+
+### 题目描述
+```
+给定 n 个非负整数，用来表示柱状图中各个柱子的高度。每个柱子彼此相邻，且宽度为 1 。
+求在该柱状图中，能够勾勒出来的矩形的最大面积。
+![image text](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/histogram.png)
+以上是柱状图的示例，其中每个柱子的宽度为 1，给定的高度为 [2,1,5,6,2,3]。
+![image text](https://assets.leetcode-cn.com/aliyun-lc-upload/uploads/2018/10/12/histogram_area.png)
+图中阴影部分为所能勾勒出的最大矩形面积，其面积为 10 个单位。
+
+示例:
+
+输入: [2,1,5,6,2,3]
+输出: 10
+
+```
+### 解题思路
+* 首先从任意位置i处开始，以i为中心可以围成的矩形的面积大小，取决于由i开始向左右扩展
+ * 向左扩展到j处，此时height[j]是i左边第一个比height[i]小的位置
+ * 向右扩展到K处同理
+ * 此时，j和i，k和i之间的任意柱子都比i处的柱子的高度高，此时便可以计算出以i为中心可以围成的矩形的面积大小 = （k-j-1）*height[i]
+* 其次考虑如何得到每个i的左边界和右边界，维护一个单调递增的栈，在遍历数组的过程中进行栈的操作，保存边界值
+ * 左边界:如果当前的栈顶的位置处的柱子大小 >= height[i]，则出栈，一直到出栈遇到第一个比height[i]小的柱子，如果直到栈空都没找到，
+ 说明当前的位置i处的柱子左边没有比他更小的，则将当前位置i的左边界设置为-1，不然就取栈顶的数作为i的左边界
+ * 右边界同理，只是当没有右边界时可以设置为height.length
+### 参考答案
+
+```java
+class Solution {
+    public int largestRectangleArea(int[] heights) {
+        int n = heights.length;
+        int[] left = new int[n];
+        int[] right = new int[n];
+        
+        Stack<Integer> s = new Stack<Integer>();
+
+        for(int i=0;i<n;i++){
+            while(!s.isEmpty()&&heights[s.peek()] >= heights[i]){
+                 s.pop();
+            }
+            left[i] = (s.isEmpty() ? -1 : s.peek());
+            s.push(i);
+        }
+        s.clear();
+        for(int j=n-1;j>=0;j--){
+            while(!s.isEmpty()&&heights[s.peek()] >= heights[j]){
+                s.pop();
+            }
+            right[j] = (s.isEmpty() ? n : s.peek());
+            s.push(j);
+        }
+        int ans = 0;
+        for(int k=0;k<n;k++){
+            ans = Math.max(ans, (right[k] - left[k] - 1)*heights[k]);
+        }
+        return ans;
+    }
+}
+```
